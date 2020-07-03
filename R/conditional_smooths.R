@@ -50,7 +50,8 @@ conditional_smooths.brmsfit <- function(x, smooths = NULL,
                                         spaghetti = FALSE,
                                         resolution = 100, too_far = 0,
                                         subset = NULL, nsamples = NULL,
-                                        ...) {
+                                        smooth_values = NULL,
+                                        ...) { <- <- 
   spaghetti <- as_one_logical(spaghetti)
   contains_samples(x)
   x <- restructure(x)
@@ -65,7 +66,7 @@ conditional_smooths.brmsfit <- function(x, smooths = NULL,
     bterms, fit = x, samples = samples, smooths = smooths, 
     conditions = conditions, int_conditions = int_conditions, 
     too_far = too_far, resolution = resolution, probs = probs, 
-    spaghetti = spaghetti
+    spaghetti = spaghetti, smooth_values = smooth_values
   )
   if (!length(out)) {
     stop2("No valid smooth terms found in the model.")
@@ -117,7 +118,7 @@ conditional_smooths.brmsterms <- function(x, ...) {
 conditional_smooths.btl <- function(x, fit, samples, smooths,
                                     conditions, int_conditions, 
                                     probs, resolution, too_far,
-                                    spaghetti, ...) {
+                                    spaghetti, smooth_values, ...) {
   stopifnot(is.brmsfit(fit))
   out <- list()
   mf <- model.frame(fit)
@@ -147,10 +148,14 @@ conditional_smooths.btl <- function(x, fit, samples, smooths,
     for (cv in covars) {
       if (is.numeric(mf[[cv]])) {
         is_numeric[cv] <- TRUE
-        values[[cv]] <- seq(
-          min(mf[[cv]]), max(mf[[cv]]), 
-          length.out = resolution
-        )
+        if(cv %in% names(smooth_values)){
+          values[[cv]] <- smooth_values[[cv]]
+        } else {
+          values[[cv]] <- seq(
+            min(mf[[cv]]), max(mf[[cv]]), 
+            length.out = resolution
+          )
+        }
       } else {
         values[[cv]] <- levels(factor(mf[[cv]]))
       }
